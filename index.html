@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadeau Rehab</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #2a2a2a 0%, #000000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .scene {
+            width: 320px;
+            height: 380px;
+            perspective: 1500px;
+        }
+
+        .box {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .box-lid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(145deg, #e60000, #990000);
+            border-radius: 30px 30px 5px 5px;
+            border-bottom: 8px solid;
+            border-image: linear-gradient(to right, #b8860b, #ffd700, #fdf5e6, #ffd700, #b8860b) 1;
+            transform-origin: top;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 1.2s;
+            z-index: 10;
+            box-shadow: 
+                inset 0 10px 20px rgba(255,255,255,0.2), 
+                inset 0 -5px 15px rgba(0,0,0,0.4),
+                0 20px 40px rgba(0,0,0,0.8);
+        }
+
+        .box-base {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(145deg, #990000, #660000);
+            border-radius: 5px 5px 30px 30px;
+            z-index: 1;
+            box-shadow: 
+                inset 0 -10px 20px rgba(0,0,0,0.5),
+                0 30px 50px rgba(0,0,0,0.9);
+        }
+
+        .box-inside {
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background: radial-gradient(circle, #b30000 0%, #4d0000 100%);
+            border-radius: 20px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.8s 0.4s;
+        }
+
+        .box.open .box-lid {
+            transform: rotateX(-115deg);
+            box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
+        }
+
+        .box.open .box-inside {
+            opacity: 1;
+        }
+
+        .chain-svg {
+            position: absolute;
+            top: 15%;
+            left: 0;
+            width: 100%;
+            height: 85%;
+            pointer-events: none;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.7));
+        }
+
+        .charm {
+            position: absolute;
+            border-radius: 50%;
+            background: #111;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 
+                0 5px 15px rgba(0,0,0,0.8),
+                inset 0 0 10px rgba(255,255,255,0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+            pointer-events: auto;
+        }
+
+        .charm::before {
+            content: '';
+            position: absolute;
+            top: -3px; right: -3px; bottom: -3px; left: -3px;
+            z-index: -1;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #d4d4d4, #ffffff, #8a8a8a, #ffffff, #d4d4d4);
+        }
+
+        .charm:hover {
+            transform: scale(1.3) translateY(-5px);
+            box-shadow: 
+                0 15px 25px rgba(0,0,0,0.9),
+                0 0 20px rgba(255,255,255,0.6);
+            z-index: 20;
+        }
+
+        .charm img, .charm video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            opacity: 0.85;
+            transition: opacity 0.3s;
+        }
+
+        .charm:hover img, .charm:hover video {
+            opacity: 1;
+        }
+
+        .charm-1 { width: 38px; height: 38px; top: 25%; left: 14%; }
+        .charm-2 { width: 44px; height: 44px; top: 48%; left: 21%; }
+        .charm-4 { width: 44px; height: 44px; top: 48%; right: 21%; }
+        .charm-5 { width: 38px; height: 38px; top: 25%; right: 14%; }
+
+        .charm-main {
+            width: 62px; 
+            height: 62px; 
+            top: 70%; 
+            left: 50%; 
+            transform: translateX(-50%);
+            border-width: 5px;
+        }
+
+        .charm-main::before {
+            background: repeating-conic-gradient(from 0deg, #ffffff 0 10deg, #cccccc 10deg 20deg, #999999 20deg 30deg);
+        }
+
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s;
+            cursor: pointer;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+        }
+
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(255,255,255,0.15);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <div class="box" id="masterpieceBox" onclick="openBox()">
+            <div class="box-lid"></div>
+            <div class="box-base"></div>
+            
+            <div class="box-inside">
+                <!-- Snsla d no9ra b SVG -->
+                <svg class="chain-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="silver" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="50%" stop-color="#a0a0a0" />
+                            <stop offset="100%" stop-color="#e0e0e0" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M 10 0 Q 50 120 90 0" fill="none" stroke="url(#silver)" stroke-width="1.5" stroke-dasharray="2, 1" />
+                </svg>
+
+                <!-- Tswira 1 -->
+                <div class="charm charm-1" onclick="openMedia(event, 'img', 'photo1.jpg')">
+                    <img src="photo1.jpg" alt="">
+                </div>
+                
+                <!-- Video 1 (L'werd) -->
+                <div class="charm charm-2" onclick="openMedia(event, 'vid', 'video1.mp4')">
+                    <video src="video1.mp4" muted loop autoplay playsinline></video>
+                </div>
+                
+                <!-- Pendant Lkbir f Lwest (L'unboxing) -->
+                <div class="charm charm-main" onclick="openMedia(event, 'vid', 'video2.mp4')">
+                    <video src="video2.mp4" muted loop autoplay playsinline></video>
+                </div>
+                
+                <!-- Video 3 (Chare3) -->
+                <div class="charm charm-4" onclick="openMedia(event, 'vid', 'video3.mp4')">
+                    <video src="video3.mp4" muted loop autoplay playsinline></video>
+                </div>
+                
+                <!-- Tswira 2 -->
+                <div class="charm charm-5" onclick="openMedia(event, 'img', 'photo2.jpg')">
+                    <img src="photo2.jpg" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- L'ecran li kykber mli ktkiliki -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <img id="lb-img" class="lightbox-content" style="display: none;" src="" alt="">
+        <video id="lb-vid" class="lightbox-content" style="display: none;" controls autoplay playsinline>
+            <source src="" type="video/mp4">
+        </video>
+    </div>
+
+    <script>
+        let boxOpened = false;
+
+        function openBox() {
+            if (!boxOpened) {
+                document.getElementById('masterpieceBox').classList.add('open');
+                boxOpened = true;
+            }
+        }
+
+        const lightbox = document.getElementById('lightbox');
+        const lbImg = document.getElementById('lb-img');
+        const lbVid = document.getElementById('lb-vid');
+
+        function openMedia(e, type, src) {
+            e.stopPropagation();
+            
+            lightbox.style.display = 'flex';
+            setTimeout(() => { lightbox.classList.add('active'); }, 10);
+
+            if (type === 'img') {
+                lbImg.src = src;
+                lbImg.style.display = 'block';
+                lbVid.style.display = 'none';
+                lbVid.pause();
+            } else if (type === 'vid') {
+                lbVid.src = src;
+                lbVid.style.display = 'block';
+                lbImg.style.display = 'none';
+                lbVid.currentTime = 0;
+                lbVid.play();
+            }
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            setTimeout(() => {
+                lightbox.style.display = 'none';
+                lbVid.pause();
+                lbVid.currentTime = 0;
+            }, 400);
+        }
+    </script>
+</body>
+</html>
